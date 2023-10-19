@@ -2,8 +2,10 @@ import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Files;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 
@@ -49,9 +51,11 @@ public class Servidor {
             Headers headers = exchange.getRequestHeaders();
             if (headers.containsKey("fileName")) {
                 String fileName = headers.get("fileName").get(0);
-                System.out.println("Archivo solicitado: " + fileName);
-                String response = "OK!";
-                sendResponse(response.getBytes(), exchange);
+                File file = new File(fileName);
+                byte[] response = Files.readAllBytes(file.toPath());
+                
+                System.out.println("Se ha enviado el archivo " + fileName + "...");
+                sendResponse(response, exchange);
                 return;
             }
         } catch (Exception e) {
@@ -73,8 +77,11 @@ public class Servidor {
             if (headers.containsKey("fileName")) {
                 String fileName = headers.get("fileName").get(0);
                 int fileSize = Integer.valueOf(headers.get("Content-length").get(0));
-                System.out.println("Archivo enviado: " + fileName + " - " + fileSize + " bytes");
-                // byte[] requestBytes = exchange.getRequestBody().readAllBytes();
+                byte[] requestBytes = exchange.getRequestBody().readAllBytes();
+                File file = new File(fileName);
+                Files.write(file.toPath(), requestBytes);
+                
+                System.out.println("Se ha recibido el archivo " + fileName + " - " + fileSize + " bytes");
                 String response = "OK!";
                 sendResponse(response.getBytes(), exchange);
                 return;
