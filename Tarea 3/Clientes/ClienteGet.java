@@ -7,13 +7,14 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.URI;
 import java.time.Duration;
+import java.util.Base64;
 
 public class ClienteGet {
     
     private static final HttpClient httpClient = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).connectTimeout(Duration.ofSeconds(10)).build();
     
     public static void main(String[] args) throws IOException, InterruptedException {
-        HttpRequest request = HttpRequest.newBuilder().GET().uri(URI.create("http://" + args[0] + ":" + args[1] + "/get")).setHeader("fileName", args[2]).build();
+        HttpRequest request = HttpRequest.newBuilder().GET().uri(URI.create("http://" + args[0] + ":" + args[1] + "/get")).setHeader("Authorization", "Basic " + Base64.getEncoder().encodeToString("username:password".getBytes())).setHeader("fileName", args[2]).build();
         
         HttpResponse<byte[]> response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
         
@@ -22,8 +23,8 @@ public class ClienteGet {
         
         HttpHeaders headers = response.headers();
         
-        System.out.println("Longitud del archivo: " + headers.firstValue("content-length").get());
         System.out.println("Status code: " + response.statusCode());
+        System.out.println("Longitud del archivo: " + headers.firstValue("content-length").get());
     }
     
 }

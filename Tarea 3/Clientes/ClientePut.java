@@ -7,6 +7,7 @@ import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.URI;
 import java.time.Duration;
+import java.util.Base64;
 
 public class ClientePut {
     
@@ -16,10 +17,11 @@ public class ClientePut {
         File file = new File(args[2]);
         byte[] requestPayload = Files.readAllBytes(file.toPath());
                 
-        HttpRequest request = HttpRequest.newBuilder().uri(URI.create("http://" + args[0] + ":" + args[1] + "/put")).PUT(BodyPublishers.ofByteArray(requestPayload)).setHeader("fileName", args[2]).build();
+        HttpRequest request = HttpRequest.newBuilder().uri(URI.create("http://" + args[0] + ":" + args[1] + "/put")).PUT(BodyPublishers.ofByteArray(requestPayload)).setHeader("fileName", args[2]).setHeader("Authorization", "Basic " + Base64.getEncoder().encodeToString("username:password".getBytes())).build();
         
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         
+        System.out.println("Status code: " + response.statusCode());
         System.out.println("Response Body: " + response.body());
     }
     

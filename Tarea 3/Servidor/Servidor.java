@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.net.InetSocketAddress;
+import java.util.Base64;
 import java.util.concurrent.Executors;
 
 public class Servidor {
@@ -14,6 +15,7 @@ public class Servidor {
     private static final String GET_ENDPOINT = "/get";
     private static final String PUT_ENDPOINT = "/put";
     private static final String STATUS_ENDPOINT = "/status";
+    private static final String CREDENTIALS = "Basic " + Base64.getEncoder().encodeToString("username:password".getBytes());
     private final int port;
     private HttpServer server;
     
@@ -47,8 +49,19 @@ public class Servidor {
             return;
         }
         
+        Headers headers = exchange.getRequestHeaders();
+        
+        if (headers.containsKey("Authorization")) {
+            if ( !headers.get("Authorization").get(0).equals(this.CREDENTIALS) ) {
+                sendUnauthorizedResponse(exchange);
+                return;
+            }
+        } else {
+            sendUnauthorizedResponse(exchange);
+            return;
+        }
+        
         try {
-            Headers headers = exchange.getRequestHeaders();
             if (headers.containsKey("fileName")) {
                 String fileName = headers.get("fileName").get(0);
                 File file = new File(fileName);
@@ -72,8 +85,19 @@ public class Servidor {
             return;
         }
         
+        Headers headers = exchange.getRequestHeaders();
+        
+        if (headers.containsKey("Authorization")) {
+            if ( !headers.get("Authorization").get(0).equals(this.CREDENTIALS) ) {
+                sendUnauthorizedResponse(exchange);
+                return;
+            }
+        } else {
+            sendUnauthorizedResponse(exchange);
+            return;
+        }
+        
         try {
-            Headers headers = exchange.getRequestHeaders();
             if (headers.containsKey("fileName")) {
                 String fileName = headers.get("fileName").get(0);
                 int fileSize = Integer.valueOf(headers.get("Content-length").get(0));
@@ -110,6 +134,13 @@ public class Servidor {
         outputStream.write(responseBytes);
         outputStream.flush();
         outputStream.close();
+        exchange.close();
+    }
+    
+    private void sendUnauthorizedResponse(HttpExchange exchange) throws IOException {
+        exchange.sendResponseHeaders(401, -1);
+        OutputStream outputStream = exchange.getResponseBody();
+        outputStream.flush();
         exchange.close();
     }
     
